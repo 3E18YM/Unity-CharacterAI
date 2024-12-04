@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a472a4806da7f9147a4a5cd7eee170df, type: 3}
+  m_Name: TurnController
+  m_EditorClassIdentifier: 
+  _Transition:
+    rid: 765343797638070277
+  references:
+    version: 2
+    RefIds:
+    - rid: 765343797638070277
+      type: {class: LinearMixerTransition, ns: Animancer, asm: Animancer}
+      data:
+        _FadeDuration: 0.25
+        _Events:
+          _NormalizedTimes: []
+          _Callbacks: []
+          _Names: []
+        _Speed: 1
+        _Animations:
+        - {fileID: 7400014, guid: 5033c980c09474948b2a9510841d9491, type: 3}
+        - {fileID: 7400010, guid: 5033c980c09474948b2a9510841d9491, type: 3}
+        - {fileID: 7400000, guid: d556ab52e17604958b19876c5f242758, type: 3}
+        - {fileID: 7400000, guid: 5033c980c09474948b2a9510841d9491, type: 3}
+        - {fileID: 7400006, guid: 5033c980c09474948b2a9510841d9491, type: 3}
+        _Speeds: []
+        _SynchronizeChildren: 
+        _Thresholds:
+        - -0.5
+        - -0.25
+        - 0
+        - 0.25
+        - 0.5
+        _DefaultParameter: 0
+        _ExtrapolateSpeed: 1
