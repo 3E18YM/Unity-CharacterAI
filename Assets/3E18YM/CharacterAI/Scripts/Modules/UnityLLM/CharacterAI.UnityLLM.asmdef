@@ -1,0 +1,19 @@
+{
+    "name": "CharacterAI.UnityLLM",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c864cd2730c997681836ab7f5f8081d0",
+        "GUID:cf7c06d97d9c3b7db881733f839f5ae3",
+        "GUID:e24b8c7d32156a9ee9a0f7796a734ef3",
+        "GUID:32e09844647a5e44aa5d3e667afaef19"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,16 @@
+{
+    "name": "CharacterAI.Whisper",
+    "rootNamespace": "",
+    "references": [
+        "CharacterAI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

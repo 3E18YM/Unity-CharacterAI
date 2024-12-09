@@ -1,0 +1,23 @@
+{
+    "name": "CharacterAI",
+    "rootNamespace": "",
+    "references": [
+        "GUID:df2a3154709dcdd4aa42364358e67a8f",
+        "GUID:4c25c05f410a3a447a75c3b0909152ef",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:029c1c1b674aaae47a6841a0b89ad80e",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:0d8beb7f090555447a6cf5ce9e54dbb4",
+        "GUID:ed017328c02eebe4187867b8ab045929",
+        "GUID:be98b931cf703e44899315e1f9bafe8b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
