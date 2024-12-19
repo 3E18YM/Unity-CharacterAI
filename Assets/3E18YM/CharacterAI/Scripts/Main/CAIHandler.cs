@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using CrazyMinnow.SALSA;
@@ -12,29 +13,29 @@ namespace CharacterAI
 {
     public class CAIHandler : MonoBehaviour
     {
-    
+
         #region regionGameObject
         [Header("regionGameObject")]
         [InjectOptional] public DiContainer DiContainer;
-        [SerializeReference, OdinSerialize, InjectOptional] public SpeechToText speechToText;
-        [SerializeReference, OdinSerialize, InjectOptional] public TextToSpeech textToSpeech;
-        [SerializeReference, OdinSerialize, InjectOptional] public IaiServices aIServices;
+        [SerializeReference, OdinSerialize, InjectOptional] public ITextToSpeech textToSpeech;
+        [SerializeReference, OdinSerialize, InjectOptional] public ISpeechToText speechToText;
+        [SerializeReference, OdinSerialize, InjectOptional] public IAIServices aIServices;
         [InjectOptional] public ModelController modelController;
-    
+
         #endregion characterData
-    
-        [TabGroup("characterData")]public CharacterData characterData;
+
+        [TabGroup("characterData")] public CharacterData characterData;
         #region CharacterElement
-        [TabGroup("CharacterElement")]public StatusManage StatusManage;
-        [TabGroup("CharacterElement")]public SpeechQueue speechQueue;
-        [TabGroup("CharacterElement")]public ListenHandler listenHandler;
+        [TabGroup("CharacterElement")] public StatusManage StatusManage = new StatusManage ();
+        [TabGroup("CharacterElement")] [SerializeField]public SpeechQueue speechQueue = new SpeechQueue();
+        [TabGroup("CharacterElement")] [SerializeField]public ListenHandler listenHandler = new ListenHandler();
         #endregion
         #region LoaderSetting
-        [TabGroup("LoaderSetting")]public bool loadOnStart;
-        [TabGroup("LoaderSetting")]public Transform characterContainer;
-        [TabGroup("LoaderSetting")]public Transform eyesTarget;
-        [TabGroup("LoaderSetting")][SerializeField]private CharacterLoadingList loadingDatas;
-        [TabGroup("LoaderSetting"),InjectOptional] public UnityEvent<CharacterData> onCharacterChanged;
+        [TabGroup("LoaderSetting")] public bool loadOnStart;
+        [TabGroup("LoaderSetting")] public Transform characterContainer;
+        [TabGroup("LoaderSetting")] public Transform eyesTarget;
+        [TabGroup("LoaderSetting")][SerializeField] private CharacterLoadingList loadingDatas;
+        [TabGroup("LoaderSetting"), InjectOptional] public UnityEvent<CharacterData> onCharacterChanged;
         #endregion
 
         #region PrivateValue
@@ -42,75 +43,71 @@ namespace CharacterAI
         private readonly AsyncQueue<string> queue = new AsyncQueue<string>();
         private bool isProcessing = false;
         #endregion
-  
 
-        private void Awake()
-        {
-            if (DiContainer == null)
-            {
-                DiContainer = new DiContainer();
-                BindToDiContainer();
-            }
-            if(StatusManage==null)StatusManage = new StatusManage();
-            if(listenHandler==null)listenHandler = new ListenHandler(DiContainer);
-            if(speechQueue==null)speechQueue = new SpeechQueue(DiContainer);
-        
-        }
-   
         void BindToDiContainer()
         {
-            DiContainer.BindInstance(speechToText).AsSingle();
             DiContainer.BindInstance(textToSpeech).AsSingle();
+            DiContainer.BindInstance(speechToText).AsSingle();
             DiContainer.BindInstance(aIServices).AsSingle();
             DiContainer.BindInstance(characterData).AsSingle();
             DiContainer.BindInstance(speechQueue).AsSingle();
             DiContainer.BindInstance(listenHandler).AsSingle();
             DiContainer.BindInstance(StatusManage).AsSingle();
             DiContainer.BindInstance(this).AsSingle();
-        
+
         }
 
         async void Start()
-        {
+        {   
+            StatusManage = new StatusManage();
+            if (DiContainer == null)
+            {
+                DiContainer = new DiContainer();
+                BindToDiContainer();
+            }
+            DiContainer.Inject(listenHandler);
+            DiContainer.Inject(speechQueue);
+            
             StatusManage.AddStatusListener<string>(Status.AIReply, (text) => queue.Enqueue(text));
-        
+
             if (loadOnStart)
             {
                 await LoadCharacter(characterData);
             }
         }
 
-  
-        [Button]
-        public async Task LoadCharacter( CharacterData characterData = null)
-        {
-            this.characterData = characterData?? this.characterData;
 
+        [Button]
+        public async Task LoadCharacter(CharacterData characterData = null)
+        {
+            this.characterData = characterData ?? this.characterData;
             await loadCharacterSemaphore.WaitAsync();
 
             try
             {
-                LoadModel(characterData.modelID);
+                LoadModel(this.characterData.modelID);
+            
                 DiContainer.Inject(modelController.cAIBehavior);
                 await modelController.cAIBehavior.Initial(this, characterData.behaviorData);
+            
                 aIServices?.SetAssistant(characterData.assistantID);
-                this.characterData = characterData;
                 onCharacterChanged?.Invoke(characterData);
-
-
+               
             }
-            finally
+            catch (Exception e)
             {
+                Debug.LogError(e);
                 loadCharacterSemaphore.Release();
-
+                throw;
             }
+
 
         }
         [Button]
         public void LoadModel(int characterIndex)
-        {   
-            if(loadingDatas == null) return;
-        
+        {
+            if (loadingDatas == null) return;
+
             foreach (Transform child in characterContainer)
             {
                 if (child.gameObject.tag == "Character")
@@ -120,7 +117,7 @@ namespace CharacterAI
 
 
             }
-        
+
             GameObject prefab = loadingDatas.modelDataList[characterIndex].prefab;
             var newGameObject = Instantiate(
                 prefab,
@@ -138,7 +135,7 @@ namespace CharacterAI
             newGameObject.transform.localRotation = quaternion.Euler(Vector3.zero);
 
             Animator animator = modelController.animator;
-        
+
             try
             {
                 Eyes eyes = animator.GetComponent<Eyes>();
@@ -161,7 +158,6 @@ namespace CharacterAI
         }
         public async Task Speak(SpeechCommand speechCommand, bool insert = false)
         {
-            textToSpeech.audioSource = modelController.audioSource;
             if (insert && StatusManage.CheckStatus(Status.Speech))
             {
                 speechQueue.ForceStopAndResetQueue();
@@ -171,7 +167,7 @@ namespace CharacterAI
         }
         public async Task Speech(string message, string transition = null, string language = null, string voiceID = null, float rate = -1)
         {
-            textToSpeech.audioSource = modelController.audioSource;
+
             SpeechCommand speechCommand =
                 new SpeechCommand(
                     message.ToString(),
@@ -204,7 +200,7 @@ namespace CharacterAI
             await aIServices.SendMessages(message + autoDetectLanguage);
         }
 
-    
+
 
 
         private async Task ProcessQueue()
@@ -228,7 +224,6 @@ namespace CharacterAI
             speechQueue?.ForceStopAndResetQueue();
             listenHandler?.ForceStop();
             aIServices?.ForceStop();
-            speechToText?.ForceStop();
             queue.Clear();
             isProcessing = false;
 

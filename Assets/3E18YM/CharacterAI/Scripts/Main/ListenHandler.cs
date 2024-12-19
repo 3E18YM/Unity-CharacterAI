@@ -6,17 +6,18 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 using Zenject;
+using Sirenix.Serialization;
 
 namespace CharacterAI
 {
     [Serializable]
     public class ListenHandler
     {
+        [InjectOptional] public ISpeechToText speechToText;
         [InjectOptional] public DiContainer DiContainer;
-        [InjectOptional] public SpeechToText Stt;
         [InjectOptional] public StatusManage StatusManage;
         public Microphone_Handler MicrophoneHandler = new Microphone_Handler();
-    
+
         private bool pause = false;
         [FormerlySerializedAs("UnityMic")] public bool unityMic = false;
         public UnityEvent<bool> onPause;
@@ -24,11 +25,10 @@ namespace CharacterAI
         private string message = null;
         private string language = "zh-TW";
         public ListenHandler(DiContainer diContainer = null)
-        {   
-            if(diContainer == null)return;
-        
+        {
+            if (diContainer == null) return;
+
             this.DiContainer = diContainer;
-            Stt = this.DiContainer.Resolve<SpeechToText>();
             StatusManage = this.DiContainer.Resolve<StatusManage>();
             diContainer.Inject(MicrophoneHandler);
         }
@@ -45,14 +45,14 @@ namespace CharacterAI
             if (unityMic)
             {
                 AudioClip audioClip = await MicrophoneHandler.StartRecording();
-                tempString = await Stt.Listen(audioClip);
+                tempString = await speechToText.Listen(audioClip);
                 message += tempString;
                 StatusManage?.ExecuteStatusEvent(Status.AzureSTT, message);
 
             }
             else
             {
-                tempString = await Stt.ListenStreaming(autoStop, language);
+                tempString = await speechToText.ListenStreaming(autoStop, language);
                 message += tempString;
             }
 
@@ -80,7 +80,7 @@ namespace CharacterAI
         public void Pause()
         {
             pause = true;
-            Stt.ForceStop();
+            speechToText.ForceStop();
             MicrophoneHandler.StopRecording();
             onPause?.Invoke(true);
 
@@ -99,7 +99,7 @@ namespace CharacterAI
                 pause = false;
                 cts.Cancel();
             }
-            Stt.ForceStop();
+            speechToText.ForceStop();
             MicrophoneHandler.StopRecording();
 
         }
@@ -108,7 +108,7 @@ namespace CharacterAI
             if (pause == false)
             {
                 pause = true;
-                Stt.ForceStop();
+                speechToText.ForceStop();
                 MicrophoneHandler.StopRecording();
                 message = null;
                 pause = false;

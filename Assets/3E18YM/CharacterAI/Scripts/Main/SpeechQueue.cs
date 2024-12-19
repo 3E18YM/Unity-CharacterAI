@@ -6,17 +6,18 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Zenject;
+using Sirenix.Serialization;
 
 namespace CharacterAI
 {
     [Serializable]
     public class SpeechQueue
     {
-        [Inject] public TextToSpeech TextToSpeech; 
+        [InjectOptional] public ITextToSpeech textToSpeech;
         [InjectOptional] private StatusManage statusManage;
         #region SentenceSetting"
         [Header("SentenceSetting")][SerializeField] private int sentenceLength = 50;
-        [SerializeField] private HashSet<char> specialCharacters = new HashSet<char> { '。', '.', ',', '，', '?', '？', '!', '！', ':', '：' };
+        private HashSet<char> specialCharacters = new HashSet<char> { '。', '.', ',', '，', '?', '？', '!', '！', ':', '：' };
         #endregion
         public List<SpeechCommand> tempCommands = new List<SpeechCommand>();
         Dictionary<CommandType, Status> keyValuePairs = new Dictionary<CommandType, Status>()
@@ -28,22 +29,23 @@ namespace CharacterAI
         private object lockObject = new object();
         private bool pause;
         private bool newLine = true;
-    
+
         public SpeechQueue(DiContainer diContainer = null)
-        {   
-            if(diContainer == null)return;
-            TextToSpeech = diContainer.Resolve<TextToSpeech>();
-            statusManage = diContainer.Resolve<StatusManage>();
-        
+        {
+            if (diContainer != null)
+            {
+                textToSpeech = diContainer.Resolve<ITextToSpeech>();
+                statusManage = diContainer.Resolve<StatusManage>();
+            }
+            lockObject = new object();
+            
+
         }
         public async Task SendToSpeechQueue(SpeechCommand speechCommand)
         {
 
             statusManage?.EnableStatus(Status.Speech);
-            lock (lockObject) // 加入鎖定以確保隊列更新安全
-            {
-                InputCommandHandler(speechCommand);
-            }
+            InputCommandHandler(speechCommand);
             if (isSpeech == false)
             {
                 await ExecuteQueue();
@@ -69,7 +71,7 @@ namespace CharacterAI
                 //     status_Manage?.ExecuteStatusEvent(Status.Transition, tempCommands[0].transition);
 
 
-                await TextToSpeech.Speak(
+                await textToSpeech.Speak(
                     tempCommands[0].content,
                     tempCommands[0].tTsData.rate,
                     tempCommands[0].tTsData.pitch,
@@ -98,7 +100,7 @@ namespace CharacterAI
         }
         public async void JumpToNext()
         {
-            await TextToSpeech.ForceStop();
+            await textToSpeech.ForceStop();
         }
         public void Pause(bool active = true)
         {
@@ -106,13 +108,13 @@ namespace CharacterAI
             pause = active;
             if (active)
             {
-                TextToSpeech.ForceStop();
+                textToSpeech.ForceStop();
             }
 
         }
         public void ForceStopAndResetQueue()
         {
-            TextToSpeech.ForceStop();
+            textToSpeech.ForceStop();
             tempCommands.Clear();
             isSpeech = false;
             statusManage?.DisableStatus(Status.Speech);
@@ -126,8 +128,7 @@ namespace CharacterAI
             var text = speechCommand.content;
             var contents = text.GetAllTags();
             var transitions = speechCommand.transition.GetAllTags();
-
-
+            // 定義特殊字符，用於分割句子
             string pattern = $"([{Regex.Escape(string.Concat(specialCharacters))}])";
 
             for (int i = 0; i < contents.Count; i++)
