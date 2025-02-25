@@ -709,10 +709,6 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
-      propertyPath: aIServices
-      value: 4411837018924384330
-      objectReference: {fileID: 0}
-    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: eyesTarget
       value: 
       objectReference: {fileID: 330585546}
@@ -728,10 +724,6 @@ PrefabInstance:
       propertyPath: loadingDatas
       value: 
       objectReference: {fileID: 11400000, guid: 0c6d788b40182a246837b16e2d7dbc1b, type: 2}
-    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
-      propertyPath: textToSpeech
-      value: 4411836998747947079
-      objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: ModelDatas.Array.size
       value: 1
@@ -781,6 +773,30 @@ PrefabInstance:
       value: CharacterAI.UnityLLM CharacterAI.Modules.UnityLLM.AIServices_UnityLLM
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837019732312331]'
+      value: CharacterAI CharacterAI.Modules.Windows.TTSservices_WindowSpeech
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837160656207943]'
+      value: CharacterAI.FishSpeech CharacterAI.Modules.FishSpeech.TTSServiecs_FishSpeech
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837160656207944]'
+      value: CharacterAI CharacterAI.Modules.Windows.TTSservices_WindowSpeech
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837160656207945]'
+      value: CharacterAI.UnityLLM CharacterAI.Modules.UnityLLM.AIServices_UnityLLM
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837160656207946]'
+      value: CharacterAI.FishSpeech CharacterAI.Modules.FishSpeech.TTSServiecs_FishSpeech
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: 'managedReferences[4411837160656207947]'
+      value: CharacterAI.FishSpeech CharacterAI.Modules.FishSpeech.TTSServiecs_FishSpeech
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: managedReferences[4411836820535640134].Voice
       value: 
       objectReference: {fileID: 0}
@@ -797,7 +813,15 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1047581363}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207945].rag.rag
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: managedReferences[4411837018924384330].Template
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207945].Template
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
@@ -814,6 +838,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: managedReferences[4411836998747947080].localPort
+      value: 9880
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207943].localPort
+      value: 9880
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207946].localPort
+      value: 9880
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207947].localPort
       value: 9880
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
@@ -865,6 +901,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207945].llmCharacter
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207945].rag.resource
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: managedReferences[4411836998747947077].referencePath
       value: "Gooaye \u80A1\u764C_sample"
       objectReference: {fileID: 0}
@@ -881,8 +925,28 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: d769df32e222c184e84ccfd5546fc8bb, type: 2}
     - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207943].VoiceResource
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207946].VoiceResource
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207947].VoiceResource
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
       propertyPath: managedReferences[4411837018924384330].rag.optionCount
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837160656207945].rag.optionCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3546725604162235124, guid: 2f7981ddec03a3946904b959c0f0fb39, type: 3}
+      propertyPath: managedReferences[4411837019732312331].currentDetectLanguage
+      value: en-US
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

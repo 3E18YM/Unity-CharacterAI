@@ -12,18 +12,18 @@ namespace CharacterAI
         public int modelID;
         public string assistantID;
         public AssistantType assistantType;
-        [FormerlySerializedAs("tTsData")] public TtsData tTsData;
+        [FormerlySerializedAs("TtsData")] public TtsData TtsData;
         public CharacterBehaviorData behaviorData;
 
 
-        public CharacterData(string name = null, string id = null, string uuid = null, int modelID = 0, string assistantID = null, AssistantType assistantType = AssistantType.Null, TtsData ttsData = null, CharacterBehaviorData behaviorData = null, bool isPublic = false)
+        public CharacterData(string name = null, string id = null, string uuid = null, int modelID = 0, string assistantID = null, AssistantType assistantType = AssistantType.Null, TtsData TtsData = null, CharacterBehaviorData behaviorData = null, bool isPublic = false)
         {
             this.name = name;
             this.id = id;
             this.modelID = modelID;
             this.assistantID = assistantID;
             this.assistantType = assistantType;
-            this.tTsData = ttsData ?? new TtsData();
+            this.TtsData = TtsData ?? new TtsData();
             this.behaviorData = behaviorData ?? new CharacterBehaviorData();
         }
 
@@ -33,7 +33,7 @@ namespace CharacterAI
             this.id = characterData.id;
             this.modelID = characterData.modelID;
             this.assistantType = characterData.assistantType;
-            this.tTsData = new TtsData(characterData.tTsData);
+            this.TtsData = new TtsData(characterData.TtsData);
             this.behaviorData = characterData.behaviorData;
         }
 
@@ -43,7 +43,7 @@ namespace CharacterAI
             id = Guid.NewGuid().ToString();
             modelID = modelData.id;
             assistantID = null;
-            tTsData = modelData.tTsData;
+            TtsData = modelData.TtsData;
             behaviorData = modelData.motionBehaviorDatas;
 
         }
@@ -58,7 +58,7 @@ namespace CharacterAI
         public Sprite sprite;
         public GameObject prefab;
         public string slogan;
-        public TtsData tTsData;
+        public TtsData TtsData;
         public CharacterBehaviorData motionBehaviorDatas;
 
         public ModelData(string name, int id, ModelType modelType, Sprite sprite, GameObject prefab, string slogan, CharacterBehaviorData motionBehaviorDatas = null)

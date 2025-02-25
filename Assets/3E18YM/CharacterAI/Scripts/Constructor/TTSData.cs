@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Analytics;
+using Microsoft.CognitiveServices.Speech.PronunciationAssessment;
 
 namespace CharacterAI
 {
@@ -22,41 +23,56 @@ namespace CharacterAI
             this.voiceID = voiceID;
             this.gender = gender;
         }
-        public TtsData(TtsData tTsData)
+        public TtsData(TtsData TtsData)
         {
-            volume = tTsData.volume;
-            pitch = tTsData.pitch;
-            rate = tTsData.rate;
-            language = tTsData.language;
-            voiceID = tTsData.voiceID;
-            gender = tTsData.gender;
+            volume = TtsData.volume;
+            pitch = TtsData.pitch;
+            rate = TtsData.rate;
+            language = TtsData.language;
+            voiceID = TtsData.voiceID;
+            gender = TtsData.gender;
         }
 
     }
+    [Serializable]
+    public class PronunciationData
+    {
+        public string languageCode;
+        public GradingSystem GradingSystem;
+        public Granularity Granularity;
+        public bool enableMiscue;
 
+        public PronunciationData(string languageCode = default, GradingSystem gradingSystem = default, Granularity granularity = default, bool enableMiscue = true)
+        {
+            this.languageCode = languageCode;
+            GradingSystem = gradingSystem;
+            Granularity = granularity;
+            this.enableMiscue = enableMiscue;
+        }
+    }
 
     [Serializable]
     public class SpeechCommand
     {
-        public TtsData tTsData;
+        public TtsData TtsData;
         public string content;
         public string transition;
         public string xml;
         public CommandType commandType;
 
-        public SpeechCommand(string content = null, string transition = null, TtsData ttsData = null, string xml = null, CommandType commandType = CommandType.Null)
+        public SpeechCommand(string content = null, string transition = null, TtsData TtsData = null, string xml = null, CommandType commandType = CommandType.Null)
         {
             this.content = content;
             this.transition = transition;
-            this.tTsData = ttsData ?? new TtsData();
+            this.TtsData = TtsData ?? new TtsData();
             this.xml = xml;
             this.commandType = commandType == CommandType.Null ? CommandType.Speech : commandType;
         }
-        public SpeechCommand(SpeechCommand speechCommand, string content = null, string transition = null, TtsData ttsData = null, string xml = null, CommandType commandType = CommandType.Null)
+        public SpeechCommand(SpeechCommand speechCommand, string content = null, string transition = null, TtsData TtsData = null, string xml = null, CommandType commandType = CommandType.Null)
         {
             this.content = content ?? speechCommand.content;
             this.transition = transition ?? speechCommand.transition;
-            this.tTsData = ttsData ?? speechCommand.tTsData;
+            this.TtsData = TtsData ?? speechCommand.TtsData;
             this.xml = xml ?? speechCommand.xml;
             this.commandType = commandType == CommandType.Null ? speechCommand.commandType : commandType;
 

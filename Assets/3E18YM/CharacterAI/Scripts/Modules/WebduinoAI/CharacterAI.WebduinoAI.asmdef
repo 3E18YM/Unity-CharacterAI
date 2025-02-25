@@ -1,0 +1,19 @@
+{
+    "name": "CharacterAI.WebduinoAI",
+    "rootNamespace": "",
+    "references": [
+        "GUID:160422f597088014c94a9dd1bb43d072",
+        "GUID:32e09844647a5e44aa5d3e667afaef19",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:df2a3154709dcdd4aa42364358e67a8f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

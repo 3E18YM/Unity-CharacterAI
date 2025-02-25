@@ -10,7 +10,7 @@ using UnityEngine.Events;
 using Zenject;
 
 namespace CharacterAI
-{
+{   
     public class CAIHandler : MonoBehaviour
     {
 
@@ -26,9 +26,9 @@ namespace CharacterAI
 
         [TabGroup("characterData")] public CharacterData characterData;
         #region CharacterElement
-        [TabGroup("CharacterElement")] public StatusManage StatusManage = new StatusManage ();
-        [TabGroup("CharacterElement")] [SerializeField]public SpeechQueue speechQueue = new SpeechQueue();
-        [TabGroup("CharacterElement")] [SerializeField]public ListenHandler listenHandler = new ListenHandler();
+        [TabGroup("CharacterElement")][InjectOptional] public StatusManage StatusManage;
+        [TabGroup("CharacterElement")][SerializeField] public SpeechQueue speechQueue;
+        [TabGroup("CharacterElement")][SerializeField] public ListenHandler listenHandler;
         #endregion
         #region LoaderSetting
         [TabGroup("LoaderSetting")] public bool loadOnStart;
@@ -59,7 +59,10 @@ namespace CharacterAI
 
         async void Start()
         {   
-            StatusManage = new StatusManage();
+            if (StatusManage == null)
+            {
+                StatusManage = new StatusManage();
+            }
             if (DiContainer == null)
             {
                 DiContainer = new DiContainer();
@@ -67,7 +70,9 @@ namespace CharacterAI
             }
             DiContainer.Inject(listenHandler);
             DiContainer.Inject(speechQueue);
-            
+            speechQueue.Initial();
+            listenHandler.Initial();
+
             StatusManage.AddStatusListener<string>(Status.AIReply, (text) => queue.Enqueue(text));
 
             if (loadOnStart)
@@ -153,7 +158,8 @@ namespace CharacterAI
                 Debug.Log("Eyes Aim Target not found");
             }
 
-            textToSpeech.audioSource = modelController.audioSource;
+            DiContainer.BindInstance(modelController.audioSource).AsSingle();
+            DiContainer.Inject(textToSpeech);
 
         }
         public async Task Speak(SpeechCommand speechCommand, bool insert = false)
@@ -173,9 +179,9 @@ namespace CharacterAI
                     message.ToString(),
                     transition,
                     new TtsData(
-                        rate: rate == -1 ? characterData.tTsData.rate : rate,
-                        language: language ?? characterData.tTsData.language,
-                        voiceID: voiceID ?? characterData.tTsData.voiceID
+                        rate: rate == -1 ? characterData.TtsData.rate : rate,
+                        language: language ?? characterData.TtsData.language,
+                        voiceID: voiceID ?? characterData.TtsData.voiceID
                     )
                 );
 

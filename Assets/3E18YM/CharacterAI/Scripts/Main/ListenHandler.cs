@@ -1,58 +1,72 @@
-using System;
+using UnityEngine;
+using Zenject;
+using Cysharp.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
-using UnityEngine;
+using Sirenix.OdinInspector;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
-using Zenject;
-using Sirenix.Serialization;
+using System;
 
 namespace CharacterAI
 {
     [Serializable]
+
     public class ListenHandler
     {
-        [InjectOptional] public ISpeechToText speechToText;
-        [InjectOptional] public DiContainer DiContainer;
-        [InjectOptional] public StatusManage StatusManage;
-        public Microphone_Handler MicrophoneHandler = new Microphone_Handler();
+        #region Settings
+
+        [TabGroup("Settings")] public float SilenceTime = 2;
+        [TabGroup("Settings")] public bool UnityMic = false;
+        [TabGroup("Settings")] public UnityEvent<bool> onPause;
+
+        #endregion
+
+        #region Dependencies
+
+        [Inject] DiContainer diContainer;
+        [Inject] public ISpeechToText STT;
+        [Inject] StatusManage StatusManage;
+        public Microphone_Handler microphone_Handler = new Microphone_Handler();
+
+        #endregion
+
+        #region State
 
         private bool pause = false;
-        [FormerlySerializedAs("UnityMic")] public bool unityMic = false;
-        public UnityEvent<bool> onPause;
-        private CancellationTokenSource cts;
         private string message = null;
-        private string language = "zh-TW";
-        public ListenHandler(DiContainer diContainer = null)
-        {
-            if (diContainer == null) return;
+        private CancellationTokenSource cts;
 
-            this.DiContainer = diContainer;
-            StatusManage = this.DiContainer.Resolve<StatusManage>();
-            diContainer.Inject(MicrophoneHandler);
+        #endregion
+
+
+
+        public void Initial()
+        {
+            diContainer.Inject(microphone_Handler);
         }
-        public async Task<string> Listen(float autoStop = -1, bool first = true)
-        {
 
+        public async Task<string> Listen(float? autoStop = null, bool first = true)
+        {
             StatusManage?.EnableStatus(Status.Listen);
             if (first == true)
             {
                 message = "";
                 cts = new CancellationTokenSource();
             }
+
+
             string tempString = "";
-            if (unityMic)
+            if (UnityMic)
             {
-                AudioClip audioClip = await MicrophoneHandler.StartRecording();
-                tempString = await speechToText.Listen(audioClip);
+                AudioClip audioClip = await microphone_Handler.StartRecording();
+                tempString = await STT.Listen(audioClip);
                 message += tempString;
                 StatusManage?.ExecuteStatusEvent(Status.AzureSTT, message);
 
             }
             else
             {
-                tempString = await speechToText.ListenStreaming(autoStop, language);
+                tempString = await STT.ListenStreaming(autoStop ?? SilenceTime);
                 message += tempString;
             }
 
@@ -80,18 +94,20 @@ namespace CharacterAI
         public void Pause()
         {
             pause = true;
-            speechToText.ForceStop();
-            MicrophoneHandler.StopRecording();
+            STT.ForceStop();
+            microphone_Handler.StopRecording();
             onPause?.Invoke(true);
 
 
         }
+
         public void UnPause()
         {
             pause = false;
             onPause?.Invoke(false);
 
         }
+
         public void ForceStop()
         {
             if (pause == true)
@@ -99,17 +115,19 @@ namespace CharacterAI
                 pause = false;
                 cts.Cancel();
             }
-            speechToText.ForceStop();
-            MicrophoneHandler.StopRecording();
+            STT.ForceStop();
+            microphone_Handler.StopRecording();
+            StatusManage?.DisableStatus(Status.Listen);
 
         }
+
         public void Restart()
         {
             if (pause == false)
             {
                 pause = true;
-                speechToText.ForceStop();
-                MicrophoneHandler.StopRecording();
+                STT.ForceStop();
+                microphone_Handler.StopRecording();
                 message = null;
                 pause = false;
             }
@@ -121,4 +139,5 @@ namespace CharacterAI
         }
 
     }
+
 }

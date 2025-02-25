@@ -1,47 +1,31 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
-using Zenject;
-
 namespace CharacterAI
 {
-    [Serializable]
-    public abstract class IAIServices
+    public interface IAIServices
     {
-        public abstract Task<string> SendMessages(string message);
-        public virtual void SetAssistant(string assistantID){}
-        public abstract void ForceStop();
+        public Task<string> SendMessages(string message);
+        public void ForceStop();
+        public void SetAssistant(string assistantID);
+        public event Action<string> OnMessage;
     }
-    [Serializable]
-    public abstract class ISpeechToText
+    public interface ISpeechToText
     {
-        public abstract Task<string> Listen(AudioClip clip = null, string defaultLanguage = null);
-        public abstract Task<string> ListenStreaming(float autoStop = -1, string defaultLanguage = null);
-        public abstract void ForceStop();
-        public  string currentDetectLanguage = "en-US";
-    
+        public Task<string> Listen(AudioClip _clip = null, string defaultLanguage = null);
+        public Task<string> ListenStreaming(float autoStop = -1, string defaultLanguage = null);
+        public void ForceStop();
+        public string currentDetectLanguage { get; set; }
+
     }
-    [Serializable]
-    public abstract class ITextToSpeech
-    {   
-        [InjectOptional] public StatusManage status_Manage;
-        public AudioSource audioSource;
-        public abstract Task Speak(string text, double rate = 1, double pitch = 1, double volume = 1, string language = null, string voiceID = null);
-        public abstract Task ForceStop();
-    
-    }
-    public interface IData
+    public interface ITextToSpeech
     {
+        public Task Speak(string text, double rate = 1, double pitch = 1, double volume = 1, string language = null, string voiceID = null);
+        public Task ForceStop();
 
     }
-    public interface IMessage
-    {
-
-        public Task Add(string text, float speed = 0.01f);
-        public void DeleteLast();
-        public void DeleteAll();
-
-
-
-    }
+  
 }
+
+
+

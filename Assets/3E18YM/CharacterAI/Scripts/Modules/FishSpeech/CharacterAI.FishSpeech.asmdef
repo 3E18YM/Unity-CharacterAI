@@ -2,9 +2,8 @@
     "name": "CharacterAI.FishSpeech",
     "rootNamespace": "",
     "references": [
-        "CharacterAI",
-        "LeastSquares.Overtone",
-        "3E18YM.Utlies"
+        "GUID:32e09844647a5e44aa5d3e667afaef19",
+        "GUID:df2a3154709dcdd4aa42364358e67a8f"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

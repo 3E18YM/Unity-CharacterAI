@@ -6,102 +6,113 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Zenject;
-using Sirenix.Serialization;
 
 namespace CharacterAI
-{
-    [Serializable]
+{   [Serializable]
     public class SpeechQueue
     {
-        [InjectOptional] public ITextToSpeech textToSpeech;
-        [InjectOptional] private StatusManage statusManage;
-        #region SentenceSetting"
-        [Header("SentenceSetting")][SerializeField] private int sentenceLength = 50;
-        private HashSet<char> specialCharacters = new HashSet<char> { '。', '.', ',', '，', '?', '？', '!', '！', ':', '：' };
+        [InjectOptional] private ITextToSpeech textToSpeech;
+        [InjectOptional] private StatusManage StatusManage;
+
+        #region SentenceSetting
+
+        [Header("SentenceSetting")] [SerializeField]
+        public int sentenceLength = 30;
+
+        [SerializeField] public string chunkDelimiters;
+        private HashSet<char> chunkDelimiterSet;
+
         #endregion
-        public List<SpeechCommand> tempCommands = new List<SpeechCommand>();
-        Dictionary<CommandType, Status> keyValuePairs = new Dictionary<CommandType, Status>()
-        {
-            { CommandType.Speech, Status.RichText },
-            { CommandType.Image, Status.ImageURL }
-        };
+
+        public List<SpeechCommand> tempCommands;
+        private Dictionary<CommandType, Status> keyValuePairs;
+
         bool isSpeech;
-        private object lockObject = new object();
+        private object lockObject;
         private bool pause;
         private bool newLine = true;
+        private Status[] status;
 
-        public SpeechQueue(DiContainer diContainer = null)
+        public SpeechQueue(ITextToSpeech textToSpeech)
         {
-            if (diContainer != null)
-            {
-                textToSpeech = diContainer.Resolve<ITextToSpeech>();
-                statusManage = diContainer.Resolve<StatusManage>();
-            }
+            this.textToSpeech = textToSpeech;
+            Initial();
+        }
+
+        public void Initial()
+        {
             lockObject = new object();
-            
+            keyValuePairs = new Dictionary<CommandType, Status>()
+            {
+                { CommandType.Speech, Status.RichText },
+                { CommandType.Image, Status.ImageURL }
+            };
+            tempCommands = new List<SpeechCommand>();
+            status = new Status[] { Status.Speech, Status.RichText, Status.ImageURL };
 
         }
+
         public async Task SendToSpeechQueue(SpeechCommand speechCommand)
         {
 
-            statusManage?.EnableStatus(Status.Speech);
             InputCommandHandler(speechCommand);
+
             if (isSpeech == false)
             {
                 await ExecuteQueue();
             }
 
-
         }
+
         public async Task ExecuteQueue()
         {
-            lock (lockObject) // 確認在修改isSpeech標志前，沒有其他執行線程
-            {
-                isSpeech = true;
-            }
+
+            isSpeech = true;
+            StatusManage?.EnableStatus(status);
+
 
             while (tempCommands.Count != 0)
             {
 
                 await UniTask.WaitUntil(() => pause == false);
-                statusManage?.ExecuteStatusEvent(Status.Speech, tempCommands[0].content);
-                statusManage?.ExecuteStatusEvent(keyValuePairs[tempCommands[0].commandType], tempCommands[0].xml);
+                StatusManage?.ExecuteStatusEvent(Status.Speech, tempCommands[0].content);
+                StatusManage?.ExecuteStatusEvent(keyValuePairs[tempCommands[0].commandType], tempCommands[0].xml);
 
                 // if (GameManager.dataStorage.globalSettingData.transition)
-                //     status_Manage?.ExecuteStatusEvent(Status.Transition, tempCommands[0].transition);
+                //     StatusManage?.ExecuteStatusEvent(Status.Transition, tempCommands[0].transition);
 
 
                 await textToSpeech.Speak(
                     tempCommands[0].content,
-                    tempCommands[0].tTsData.rate,
-                    tempCommands[0].tTsData.pitch,
-                    tempCommands[0].tTsData.volume,
-                    tempCommands[0].tTsData.language,
-                    tempCommands[0].tTsData.voiceID
+                    tempCommands[0].TtsData.rate,
+                    tempCommands[0].TtsData.pitch,
+                    tempCommands[0].TtsData.volume,
+                    tempCommands[0].TtsData.language,
+                    tempCommands[0].TtsData.voiceID
                 );
 
                 if (!pause)
                 {
-                    lock (lockObject) // 在移除命令前加鎖
-                    {
-                        tempCommands.RemoveAt(0);
-                    }
+
+                    tempCommands.RemoveAt(0);
+
                 }
 
-
             }
 
-            lock (lockObject) // 更新狀態之前加鎖
-            {
-                isSpeech = false;
-                statusManage?.DisableStatus(Status.Speech);
-            }
+
+
+            isSpeech = false;
+            StatusManage?.DisableStatus(status);
+
 
         }
+
         public async void JumpToNext()
         {
             await textToSpeech.ForceStop();
         }
+
         public void Pause(bool active = true)
         {
 
@@ -112,166 +123,232 @@ namespace CharacterAI
             }
 
         }
-        public void ForceStopAndResetQueue()
+
+        public async Task ForceStopAndResetQueue()
         {
-            textToSpeech.ForceStop();
+            await textToSpeech.ForceStop();
             tempCommands.Clear();
             isSpeech = false;
-            statusManage?.DisableStatus(Status.Speech);
+            StatusManage?.DisableStatus(Status.Speech);
+            StatusManage?.DisableStatus(Status.RichText);
 
         }
+
+        private void OnValidate()
+        {
+            chunkDelimiterSet = GetSpecialCharactersSet();
+        }
+
         #region TextMethod
+
+        /// <summary>
+        /// 處理語音指令的主要方法
+        /// 將輸入的文本根據標籤進行解析和處理，並轉換成語音指令序列
+        /// </summary>
+        /// <param name="speechCommand">要處理的語音指令</param>
         public void InputCommandHandler(SpeechCommand speechCommand)
         {
-            // 將句子依照包含、以及不包含<br>分組
-
-            var text = speechCommand.content;
+            var text = speechCommand.content.ToRichText();
             var contents = text.GetAllTags();
             var transitions = speechCommand.transition.GetAllTags();
-            // 定義特殊字符，用於分割句子
-            string pattern = $"([{Regex.Escape(string.Concat(specialCharacters))}])";
+            chunkDelimiterSet = chunkDelimiterSet ?? GetSpecialCharactersSet();
+            string pattern = $"([{Regex.Escape(string.Concat(chunkDelimiterSet))}])";
 
             for (int i = 0; i < contents.Count; i++)
             {
-                SpeechCommand command = new SpeechCommand();
-                switch (contents[i].Tag)
+                var content = contents[i];
+                var transition = i < transitions.Count ? transitions[i].Content : null;
+
+                switch (content.Tag)
                 {
-                    // xml tag methods
                     case "br":
-                        command = new SpeechCommand(
-                            speechCommand,
-                            contents[i].Content,
-                            "",
-                            xml: contents[i].Content
-                        );
-                        tempCommands.Add(command);
-
-
-                        if (i < transitions.Count && transitions[i].Content != null)
-                        {
-                            tempCommands.LastOrDefault().transition += transitions[i].Content;
-
-                        };
+                        HandleBreakTag(speechCommand, content, transition);
                         break;
                     case "img":
-                        newLine = true;
-                        command = new SpeechCommand(
-                            speechCommand,
-                            contents[i].Content,
-                            "",
-                            xml: contents[i].Attributes["src"],
-                            commandType: CommandType.Image
-                        );
-                        tempCommands.Add(command);
-
-                        if (i < transitions.Count && transitions[i].Content != null)
-                        {
-                            tempCommands.LastOrDefault().transition += transitions[i].Content;
-                        }
+                        HandleImageTag(speechCommand, content, transition);
                         break;
                     case "recommendPrompt":
-                        statusManage?.ExecuteStatusEvent(Status.RandomPrompt, contents[i].Content);
+                        StatusManage?.ExecuteStatusEvent(Status.RandomPrompt, content.Content);
                         break;
                     default:
-                        string[] sentenceArray = Regex.Split(contents[i].Content, pattern);
-                        List<string> xmlArray = new List<string>();
-                        string[] transitionArray = null;
-
-                        if (contents[i].XmlText != null)
-                        {
-
-                            if (!string.IsNullOrWhiteSpace(contents[i].Tag))
-                            {
-                                // 為每個句子添加標籤包裹
-                                foreach (var sentence in sentenceArray)
-                                {
-                                    xmlArray.Add($"<{contents[i].Tag}>{sentence}</{contents[i].Tag}>");
-                                }
-                            }
-                            else
-                            {
-                                // 如果沒有標籤，則直接添加
-                                xmlArray.AddRange(sentenceArray);
-                            }
-
-                        }
-
-                        if (i < transitions.Count && transitions[i].Content != null)
-                        {
-                            transitionArray = Regex.Split(transitions[i].Content, pattern);
-                        }
-
-                        // 處理經過符號拆分後的句子長度
-                        for (int s = 0; s < sentenceArray.Length; s++)
-                        {
-
-                            if (!string.IsNullOrEmpty(sentenceArray[s]))
-                            {
-                                //如果tempCommands != 0 加入前一組，否則新增commands
-
-                                if (tempCommands.Count != 0 && !newLine)
-                                {
-                                    bool isSingleWord = sentenceArray[s].Length == 1;//如果SentenceArray 只有一個單字加入前一組，否則新增commands
-                                    bool isOverLength = tempCommands.LastOrDefault().content.Length + sentenceArray[s].Length > sentenceLength;//如果前一組的長度+SentenceArray 長度小於預設長度(SentenceLength) 加入前一組，否則新增commands
-
-                                    if (isSingleWord || !isOverLength)
-                                    {
-                                        var lastCommand = tempCommands.LastOrDefault();
-                                        lastCommand.content += " " + sentenceArray[s];
-                                        //lastCommand.xml += xmlArray[s] ?? null;
-                                    }
-                                    else
-                                    {
-                                        command = new SpeechCommand(
-                                            speechCommand,
-                                            content: sentenceArray[s],
-                                            transition: "",
-                                            xml: ""
-                                        );
-
-                                        tempCommands.Add(command);
-
-                                    }
-                                }
-                                else
-                                {
-                                    newLine = false;
-                                    command = new SpeechCommand(
-                                        speechCommand,
-                                        content: sentenceArray[s],
-                                        transition: "",
-                                        xml: ""
-                                    );
-
-                                    tempCommands.Add(command);
-
-                                }
-
-                                //將翻譯加入最後一個commands
-                                if (transitionArray != null && s < transitionArray.Length)
-                                {
-                                    tempCommands.LastOrDefault().transition += transitionArray[s];
-                                }
-
-                                //將Xml加入最後一個commands
-                                if (xmlArray != null && s < xmlArray.Count)
-                                {
-                                    tempCommands.LastOrDefault().xml += xmlArray[s];
-                                }
-
-
-
-                            }
-
-                        }
+                        HandleDefaultContent(speechCommand, content, transition, pattern);
                         break;
-
                 }
+            }
+        }
 
+        /// <summary>
+        /// 處理換行標籤 <br>
+        /// 創建一個新的語音指令並添加到指令隊列中
+        /// </summary>
+        private void HandleBreakTag(SpeechCommand speechCommand, XmlElementData content, string transition)
+        {
+            var command = new SpeechCommand(
+                speechCommand,
+                content: content.Content,
+                transition: "",
+                xml: content.Content
+            );
+            tempCommands.Add(command);
+
+            if (transition != null)
+            {
+                tempCommands.LastOrDefault().transition += transition;
+            }
+        }
+
+        /// <summary>
+        /// 處理圖片標籤 <img>
+        /// 創建一個新的圖片類型指令並添加到指令隊列中
+        /// </summary>
+        private void HandleImageTag(SpeechCommand speechCommand, XmlElementData content, string transition)
+        {
+            newLine = true;
+            var command = new SpeechCommand(
+                speechCommand,
+                content: content.Content,
+                transition: "",
+                xml: content.Attributes["src"],
+                commandType: CommandType.Image
+            );
+            tempCommands.Add(command);
+
+            if (transition != null)
+            {
+                tempCommands.LastOrDefault().transition += transition;
+            }
+        }
+
+        /// <summary>
+        /// 處理一般文本內容
+        /// 將文本按照標點符號分割並進行處理
+        /// </summary>
+        private void HandleDefaultContent(SpeechCommand speechCommand, XmlElementData content, string transition, string pattern)
+        {
+            string[] sentenceArray = Regex.Split(content.Content, pattern);
+            var xmlArray = PrepareXmlArray(content, sentenceArray);
+            string[] transitionArray = transition != null ? Regex.Split(transition, pattern) : null;
+
+            ProcessSentences(speechCommand, sentenceArray, xmlArray, transitionArray);
+        }
+
+        /// <summary>
+        /// 準備XML數組
+        /// 為每個句子添加適當的XML標籤包裝
+        /// </summary>
+        private List<string> PrepareXmlArray(XmlElementData content, string[] sentenceArray)
+        {
+            if (content.XmlText == null) return null;
+
+            var xmlArray = new List<string>();
+            if (!string.IsNullOrWhiteSpace(content.Tag))
+            {
+                foreach (var sentence in sentenceArray)
+                {
+                    xmlArray.Add($"<{content.Tag}>{sentence}</{content.Tag}>");
+                }
+            }
+            else
+            {
+                xmlArray.AddRange(sentenceArray);
+            }
+            return xmlArray;
+        }
+
+        /// <summary>
+        /// 處理分割後的句子序列
+        /// 遍歷所有句子並進行相應的處理
+        /// </summary>
+        private void ProcessSentences(SpeechCommand speechCommand, string[] sentenceArray, List<string> xmlArray, string[] transitionArray)
+        {
+            for (int s = 0; s < sentenceArray.Length; s++)
+            {
+                if (string.IsNullOrEmpty(sentenceArray[s])) continue;
+
+                ProcessSingleSentence(speechCommand, sentenceArray[s]);
+                AppendTransitionAndXml(s, transitionArray, xmlArray);
+            }
+        }
+
+        /// <summary>
+        /// 處理單個句子
+        /// 根據句子長度和當前狀態決定是添加到現有指令還是創建新指令
+        /// </summary>
+        private void ProcessSingleSentence(SpeechCommand speechCommand, string sentence)
+        {
+            if (tempCommands.Count != 0 && !newLine)
+            {
+                bool isSingleWord = sentence.Length == 1;
+                bool isOverLength = tempCommands.LastOrDefault().content.Length + sentence.Length > sentenceLength;
+
+                if (isSingleWord || !isOverLength)
+                {
+                    tempCommands.LastOrDefault().content += " " + sentence;
+                }
+                else
+                {
+                    AddNewCommand(speechCommand, sentence);
+                }
+            }
+            else
+            {
+                newLine = false;
+                AddNewCommand(speechCommand, sentence);
+            }
+        }
+
+        /// <summary>
+        /// 添加新的語音指令到隊列
+        /// 創建一個新的語音指令實例並添加到臨時指令列表中
+        /// </summary>
+        private void AddNewCommand(SpeechCommand speechCommand, string content)
+        {
+            var command = new SpeechCommand(
+                speechCommand,
+                content: content,
+                transition: "",
+                xml: ""
+            );
+            tempCommands.Add(command);
+        }
+
+        /// <summary>
+        /// 為最後一個指令添加翻譯和XML內容
+        /// 將對應的翻譯文本和XML標記添加到最近添加的指令中
+        /// </summary>
+        private void AppendTransitionAndXml(int index, string[] transitionArray, List<string> xmlArray)
+        {
+            var lastCommand = tempCommands.LastOrDefault();
+            if (lastCommand == null) return;
+
+            if (transitionArray != null && index < transitionArray.Length)
+            {
+                lastCommand.transition += transitionArray[index];
             }
 
+            if (xmlArray != null && index < xmlArray.Count)
+            {
+                lastCommand.xml += xmlArray[index];
+            }
+        }
+
+        /// <summary>
+        /// 驗證並更新特殊字符集合
+        /// </summary>
+        private HashSet<char> GetSpecialCharactersSet()
+        {
+            if (string.IsNullOrEmpty(chunkDelimiters))
+            {
+                chunkDelimiters = "。.,，?？!！:：";
+            }
+
+            // 將字串轉換為字符集合，自動去除重複字符
+            var set = new HashSet<char>(chunkDelimiters.ToCharArray());
+            return set;
 
         }
+
+
 
         #endregion
     }

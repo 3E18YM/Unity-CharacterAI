@@ -7,13 +7,13 @@ using System.Text.RegularExpressions;
 using System.Web;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Markdig;
 
 public static class StringExtensions
 {
     static StringExtensions()
     {
     }
-
     /// <summary>
     /// 取出句子中最後一個英文單字
     /// </summary>
@@ -25,7 +25,6 @@ public static class StringExtensions
         var match = Regex.Match(text, @"[a-zA-Z]+(?=\s*[^a-zA-Z]*$)");
         return match.Success ? match.Value : "";
     }
-
     /// <summary>
     /// 取出每個單字
     /// </summary>
@@ -44,7 +43,6 @@ public static class StringExtensions
         return words;
 
     }
-
     public static List<string> SplitEverySpace(this string sentence)
     {
         return sentence.ToLower().Split(' ')
@@ -52,14 +50,12 @@ public static class StringExtensions
             .Where(word => !string.IsNullOrWhiteSpace(word))
             .ToList();
     }
-
     public static List<string> SpitEveryText(this string sentence)
     {
         return sentence.Where(c => !char.IsPunctuation(c) && !char.IsWhiteSpace(c))
             .Select(c => c.ToString())
             .ToList();
     }
-
     public static string UrlQueryParameter(this string url, string key)
     {
         try
@@ -78,7 +74,6 @@ public static class StringExtensions
 
 
     }
-
     public static List<string> ExtractBracketsToList(this string input, char openBracket, char closeBracket, char delimiter = ',')
     {
         // 使用自訂的括號建立正則表達式
@@ -104,20 +99,6 @@ public static class StringExtensions
 
         return result;
     }
-    #region AzureSSML
-
-    /// <summary>
-    /// 轉換成Azure 語音服務SSML 語言
-    /// </summary>
-    /// <param name="text">語音內容</param>
-    /// <param name="rate">語音速度,0.1~2.0</param>
-    /// <param name="pitch">語音音調,0.1~2.0</param>
-    /// <param name="volume">語音音量,0.1~2.0</param>
-    /// <param name="language">語言,預設en-US</param>
-    /// <param name="voiceID">語音ID,預設AnaNeural</param>
-    /// <returns></returns>
-    
-
     public static string DoubleToStringPercent(this double value)
     {
 
@@ -126,9 +107,28 @@ public static class StringExtensions
         return Str;
 
     }
+    public static string ToRichText(this string markdown)
+    {
+        if (string.IsNullOrEmpty(markdown))
+        {
+            return string.Empty;
+        }
 
-    #endregion
-
+        // 使用 Markdig 將 Markdown 轉換為 HTML
+        string richText = Markdown.ToHtml(markdown);
+        richText = richText.Replace("<strong>", "<b>").Replace("</strong>", "</b>");
+        richText = richText.Replace("<em>", "<i>").Replace("</em>", "</i>");
+        //richText = richText.Replace("<del>", "<s>").Replace("</del>", "</s>");
+        string pattern = @"<(?!\/?(img\b|b\b|i\b|recommendPrompt\b|br\b)[^>]*>)[^>]+>";
+        richText = Regex.Replace(richText, pattern, string.Empty, RegexOptions.IgnoreCase);
+        return richText;
+    }
+    public static string GetImageLink(this string markdown)
+    {
+        // 連結 [text](url) 轉換為 <link="url">text</link>
+        markdown = Regex.Replace(markdown, @"\[(.*?)\]\((.*?)\)", "<link=\"$2\">$1</link>");
+        return markdown;
+    }
     public static string ToIntString<T>(this T enumValue) where T : Enum
     {
         // 將 enum 轉換成 int
@@ -136,7 +136,6 @@ public static class StringExtensions
         // 將 int 轉換成 string 並返回
         return intValue.ToString();
     }
-
     public static string BuildSha256(this string rawData)
     {
         // 創建一個 SHA256
@@ -151,7 +150,6 @@ public static class StringExtensions
             return builder.ToString();
         }
     }
-
     public static bool IsChinese(this string text)
     {
         var containsChinese = text.Any(c =>
@@ -185,12 +183,10 @@ public static class StringExtensions
 
 
     };
-
     public static string ToLanguageCode(this SystemLanguage systemLanguage)
     {
         return LanguageCodeMap[systemLanguage];
     }
-
     public static string MoveCharacter(this string input, int fromIndex, int toIndex)
     {
         if (fromIndex < 0 || fromIndex >= input.Length || toIndex < 0 || toIndex > input.Length) throw new ArgumentOutOfRangeException("Out of Index");
@@ -209,7 +205,6 @@ public static class StringExtensions
 
         return result;
     }
-
     /// <summary>
     /// 在指定索引處替換為新字串
     /// </summary>
@@ -236,7 +231,6 @@ public static class StringExtensions
         return result;
 
     }
-    
     public static string RandomMaskWord(this string sentence, int optionCount, string ignoreWord, string xmlTags = "WordMask", string attribute = null)
     {
         var startTag = string.IsNullOrWhiteSpace(attribute) ? $"<{xmlTags}>" : $"<{xmlTags} {attribute}>";
@@ -279,4 +273,5 @@ public static class StringExtensions
 
         return string.Join(" ", words);
     }
+    
 }

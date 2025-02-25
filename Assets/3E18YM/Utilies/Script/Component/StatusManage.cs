@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine.Events;
 
 public class StatusManage
@@ -23,9 +24,23 @@ public class StatusManage
         {
             statusEntries[status].OnStartMessage = value;
             statusEntries[status].OnStartEvent.Invoke(value);
-
         };
 
+    }
+    public void EnableStatus(Status[] status, object value = null)
+    {
+        foreach (var s in status)
+        {
+            EnableStatus(s, value);
+        }
+    }
+
+    public void DisableStatus(Status[] status, object value = null)
+    {
+        foreach (var s in status)
+        {
+            DisableStatus(s, value);
+        }
     }
 
     public void ExecuteStatusEvent(Status status, object value = null)
@@ -183,12 +198,11 @@ public enum Status
     GenerateText,
     PronunciationAnalysis,
     AzureSTT,
-    Practice,
-    Hint,
-    AIReply,
     Listen,
     RichText,
     ImageURL,
-    RandomPrompt
+    AIReply,
+    RandomPrompt,
+
 }
 
